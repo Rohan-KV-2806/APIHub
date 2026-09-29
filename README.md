@@ -7,8 +7,22 @@ Inspired by the implementation of OpenRouter.
 ## Implementation So Far
 
 - Base UI
+- Backend 
+- Postgres DB
 - Add services
   - Groq
   - DeepSeek
 - Create unified API keys
 - Playground
+
+## ToDo (Not in order)
+- custom provider
+- service enable/disable
+- status (if working or not)
+- peak hours caluclation
+- real time pricing
+- multpile users
+- pricing 
+- cost calculations
+- Better UI
+- documentaion
