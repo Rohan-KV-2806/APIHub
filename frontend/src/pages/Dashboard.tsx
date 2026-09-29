@@ -26,10 +26,7 @@ import {
   formatNumber,
   formatTime,
 } from '../lib/usage'
-import { PROVIDER_PRESETS } from '../lib/providers'
 import { EmptyState } from '../components/EmptyState'
-
-const PROVIDER_COLORS: Record<string, string> = { groq: '#f55036', deepseek: '#4d6bfe' }
 
 interface TipPayloadItem {
   name?: string
@@ -107,7 +104,7 @@ function StatCard({
 }
 
 export function Dashboard() {
-  const { services, keys, stats } = useStore()
+  const { services, keys, stats, providerByType } = useStore()
   const navigate = useNavigate()
 
   const connectedServices = services.filter((s) => s.status === 'connected').length
@@ -134,8 +131,8 @@ export function Dashboard() {
         <div className="card">
           <EmptyState
             icon={Plug}
-            title="Welcome to APIHub"
-            description="Connect your first AI provider to start tracking requests, tokens and latency. Groq and DeepSeek are supported today — more coming soon."
+            title="Welcome to SocksAPI"
+            description="Connect your first AI provider to start tracking requests, tokens and latency across every service you use."
             action={
               <button type="button" className="btn btn-primary" onClick={() => navigate('/services')}>
                 Add your first service <ArrowRight size={15} />
@@ -320,7 +317,7 @@ export function Dashboard() {
                     key={p.name}
                     style={{
                       width: `${(p.requests / providerTotal) * 100}%`,
-                      background: PROVIDER_COLORS[p.name] ?? '#64748b',
+                      background: providerByType(p.name)?.color ?? '#64748b',
                     }}
                   />
                 ))}
@@ -330,12 +327,20 @@ export function Dashboard() {
                   <div key={p.name} className="row-between">
                     <span className="row" style={{ gap: 9 }}>
                       <span
-                        className={`provider-tile ${p.name}`}
-                        style={{ width: 22, height: 22, borderRadius: 7, fontSize: 10 }}
+                        className="provider-tile"
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: 7,
+                          fontSize: 10,
+                          backgroundColor: providerByType(p.name)?.color,
+                        }}
                       >
-                        {PROVIDER_PRESETS[p.name as keyof typeof PROVIDER_PRESETS]?.name[0] ?? '?'}
+                        {(providerByType(p.name)?.name ?? p.name)[0] ?? '?'}
                       </span>
-                      <span style={{ fontWeight: 600, fontSize: 13.5 }}>{PROVIDER_PRESETS[p.name as keyof typeof PROVIDER_PRESETS]?.name ?? p.name}</span>
+                      <span style={{ fontWeight: 600, fontSize: 13.5 }}>
+                        {providerByType(p.name)?.name ?? p.name}
+                      </span>
                     </span>
                     <span className="text-2" style={{ fontSize: 12.5, fontVariantNumeric: 'tabular-nums' }}>
                       {formatNumber(p.requests)} req · {formatCompact(p.totalTokens)} tok ·{' '}
@@ -420,8 +425,18 @@ export function Dashboard() {
                       {e.model}
                     </td>
                     <td>
-                      <span className={`provider-tile ${e.provider}`} style={{ width: 20, height: 20, borderRadius: 6, fontSize: 9, display: 'inline-grid' }}>
-                        {PROVIDER_PRESETS[e.provider].name[0]}
+                      <span
+                        className="provider-tile"
+                        style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: 6,
+                          fontSize: 9,
+                          display: 'inline-grid',
+                          backgroundColor: providerByType(e.provider)?.color,
+                        }}
+                      >
+                        {(providerByType(e.provider)?.name ?? e.provider)[0] ?? '?'}
                       </span>
                     </td>
                     <td className="text-3">{e.keyName ?? '—'}</td>

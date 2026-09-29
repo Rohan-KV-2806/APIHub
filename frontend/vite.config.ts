@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // APIHub backend (Fastify) — provider calls now happen server-side, so
+      // SocksAPI backend (Fastify) — provider calls now happen server-side, so
       // the browser only ever talks to the backend.
       '/api': {
         target: 'http://localhost:3000',

@@ -18,7 +18,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
       headers: { 'Content-Type': 'application/json', ...(init.headers ?? {}) },
     })
   } catch {
-    throw new ApiError('Cannot reach the APIHub backend', 0)
+    throw new ApiError('Cannot reach the SocksAPI backend', 0)
   }
 
   if (!res.ok) {

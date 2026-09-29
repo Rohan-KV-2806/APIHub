@@ -1,6 +1,6 @@
-# APIHub
+# SocksAPI
 
-APIHub is a platform that connects all your AI services in one place and lets you access their models through a single API key.
+SocksAPI is a platform that connects all your AI services in one place and lets you access their models through a single API key.
 
 Inspired by the implementation of OpenRouter.
 

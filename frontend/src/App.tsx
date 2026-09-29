@@ -17,10 +17,7 @@ function OfflineBanner() {
   return (
     <div className="offline-banner">
       <TriangleAlert size={16} />
-      <span>
-        Server not reachable Retrying
-        every 5s…
-      </span>
+      <span>Server not reachable — retrying every 5s…</span>
     </div>
   )
 }
@@ -29,7 +26,7 @@ function LoadingScreen() {
   return (
     <div className="loading-screen">
       <div className="spinner" />
-      <span>Connecting to APIHub backend…</span>
+      <span>Connecting to SocksAPI backend…</span>
     </div>
   )
 }

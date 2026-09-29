@@ -579,18 +579,11 @@
   flex-shrink: 0;
 }
 
-.provider-tile.groq {
-  background: linear-gradient(135deg, #f55036, #ff7a45);
-  box-shadow: 0 6px 16px -8px rgba(245, 80, 54, 0.8);
-}
-
-.provider-tile.deepseek {
-  background: linear-gradient(135deg, #4d6bfe, #7a9bff);
-  box-shadow: 0 6px 16px -8px rgba(77, 107, 254, 0.8);
-}
-
-.provider-tile.custom {
-  background: linear-gradient(135deg, #64748b, #94a3b8);
+/* Tile colors come from the backend provider catalog (inline background-color). */
+.provider-tile {
+  background-color: #64748b;
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.22));
+  box-shadow: 0 6px 16px -8px rgba(2, 6, 18, 0.7);
 }
 
 .provider-tile.small {

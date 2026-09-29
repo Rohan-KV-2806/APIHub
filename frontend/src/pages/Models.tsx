@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Boxes, Layers, Loader2, RefreshCw, Search, Sparkles } from 'lucide-react'
 import { useStore } from '../store/store'
-import { PROVIDER_PRESETS } from '../lib/providers'
 import { formatCompact } from '../lib/usage'
 import { EmptyState } from '../components/EmptyState'
 import { PlaygroundPicker } from '../components/PlaygroundPicker'
@@ -10,7 +9,7 @@ import { useToast } from '../components/ToastContext'
 import type { ModelRef } from '../lib/types'
 
 export function Models() {
-  const { services, syncServiceModels } = useStore()
+  const { services, providerByType, syncServiceModels } = useStore()
   const toast = useToast()
   const [search, setSearch] = useState('')
   const [providerFilter, setProviderFilter] = useState('all')
@@ -183,10 +182,16 @@ export function Models() {
             <div key={providerName}>
               <div className="row" style={{ gap: 9, marginBottom: 10 }}>
                 <span
-                  className={`provider-tile ${refs[0].provider}`}
-                  style={{ width: 24, height: 24, borderRadius: 7, fontSize: 10 }}
+                  className="provider-tile"
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 7,
+                    fontSize: 10,
+                    backgroundColor: providerByType(refs[0].provider)?.color,
+                  }}
                 >
-                  {PROVIDER_PRESETS[refs[0].provider].name[0]}
+                  {(providerByType(refs[0].provider)?.name ?? providerName)[0] ?? '?'}
                 </span>
                 <span style={{ fontWeight: 650, fontSize: 13.5 }}>{providerName}</span>
                 <span className="count-chip">{refs.length}</span>

@@ -12,7 +12,6 @@ import {
   XCircle,
 } from 'lucide-react'
 import { useStore } from '../store/store'
-import { PROVIDER_PRESETS, PROVIDER_TYPES } from '../lib/providers'
 import type { ProviderType, Service } from '../lib/types'
 import { Modal } from '../components/Modal'
 import { ConfirmDialog } from '../components/ConfirmDialog'
@@ -33,13 +32,12 @@ interface ServiceDialogProps {
 }
 
 function ServiceDialog({ service, onClose }: ServiceDialogProps) {
-  const { addService, updateService, validateProvider } = useStore()
+  const { providers, addService, updateService, validateProvider } = useStore()
   const toast = useToast()
-  const [type, setType] = useState<ProviderType>(service?.type ?? 'groq')
-  const [name, setName] = useState(service?.name ?? PROVIDER_PRESETS[service?.type ?? 'groq'].name)
-  const [baseUrl, setBaseUrl] = useState(
-    service?.baseUrl ?? PROVIDER_PRESETS[service?.type ?? 'groq'].baseUrl,
-  )
+  const initialProvider = providers.find((p) => p.type === service?.type) ?? providers[0]
+  const [type, setType] = useState<ProviderType>(service?.type ?? initialProvider?.type ?? '')
+  const [name, setName] = useState(service?.name ?? initialProvider?.name ?? '')
+  const [baseUrl, setBaseUrl] = useState(service?.baseUrl ?? initialProvider?.baseUrl ?? '')
   const [apiKey, setApiKey] = useState(service?.apiKey ?? '')
   const [showKey, setShowKey] = useState(false)
   const [test, setTest] = useState<TestState>(
@@ -50,14 +48,17 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
   const [saving, setSaving] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
-  const preset = PROVIDER_PRESETS[type]
-  const effectiveName = name.trim() || preset.name
+  const preset = providers.find((p) => p.type === type)
+  const effectiveName = name.trim() || preset?.name || 'Service'
 
   const pickType = (t: ProviderType) => {
     setType(t)
     if (!service) {
-      setBaseUrl(PROVIDER_PRESETS[t].baseUrl)
-      setName(PROVIDER_PRESETS[t].name)
+      const p = providers.find((x) => x.type === t)
+      if (p) {
+        setBaseUrl(p.baseUrl)
+        setName(p.name)
+      }
     }
   }
 
@@ -146,14 +147,13 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
         <div className="field">
           <span className="field-label">Provider</span>
           <div className="row" style={{ gap: 10 }}>
-            {PROVIDER_TYPES.map((t) => {
-              const p = PROVIDER_PRESETS[t]
-              const active = type === t
+            {providers.map((p) => {
+              const active = type === p.type
               return (
                 <button
-                  key={t}
+                  key={p.type}
                   type="button"
-                  onClick={() => pickType(t)}
+                  onClick={() => pickType(p.type)}
                   className="card card-hover"
                   style={{
                     flex: 1,
@@ -166,25 +166,13 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
                     background: active ? 'var(--accent-soft)' : undefined,
                   }}
                 >
-                  <span className={`provider-tile small ${t}`}>{p.name[0]}</span>
+                  <span className="provider-tile small" style={{ backgroundColor: p.color }}>
+                    {p.name[0]}
+                  </span>
                   <span style={{ fontWeight: 600, fontSize: 13.5 }}>{p.name}</span>
                 </button>
               )
             })}
-            <div
-              className="card"
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '12px 14px',
-                opacity: 0.5,
-              }}
-            >
-              <span className="provider-tile small custom">?</span>
-              <span style={{ fontWeight: 600, fontSize: 13.5 }}>Custom — soon</span>
-            </div>
           </div>
         </div>
 
@@ -198,7 +186,7 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
               className="input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={preset.name}
+              placeholder={preset?.name}
             />
           </div>
           <div className="field">
@@ -212,7 +200,7 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
                 type={showKey ? 'text' : 'password'}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder={preset.keyHint}
+                placeholder={preset?.keyHint}
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -237,15 +225,17 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
             className="input mono"
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder={preset.baseUrl}
+            placeholder={preset?.baseUrl}
             spellCheck={false}
           />
-          <span className="field-hint">
-            Get a key at{' '}
-            <a href={preset.docsUrl} target="_blank" rel="noreferrer">
-              {preset.docsUrl.replace('https://', '')}
-            </a>
-          </span>
+          {preset?.docsUrl && (
+            <span className="field-hint">
+              Get a key at{' '}
+              <a href={preset.docsUrl} target="_blank" rel="noreferrer">
+                {preset.docsUrl.replace('https://', '')}
+              </a>
+            </span>
+          )}
         </div>
 
         <div style={{ minHeight: 24 }}>
@@ -285,7 +275,7 @@ function ServiceCard({ service, onEdit, onDelete }: {
   onEdit: () => void
   onDelete: () => void
 }) {
-  const { syncServiceModels } = useStore()
+  const { providerByType, syncServiceModels } = useStore()
   const toast = useToast()
   const [showKey, setShowKey] = useState(false)
   const [syncing, setSyncing] = useState(false)
@@ -325,7 +315,12 @@ function ServiceCard({ service, onEdit, onDelete }: {
     <div className="card card-hover" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div className="row-between">
         <div className="row" style={{ gap: 12 }}>
-          <span className={`provider-tile ${service.type}`}>{PROVIDER_PRESETS[service.type].name[0]}</span>
+          <span
+            className="provider-tile"
+            style={{ backgroundColor: providerByType(service.type)?.color }}
+          >
+            {(service.name || providerByType(service.type)?.name || '?')[0]}
+          </span>
           <div>
             <div className="card-title">{service.name}</div>
             <div className="card-sub mono truncate" style={{ maxWidth: 260 }}>
@@ -421,7 +416,7 @@ export function Services() {
           <EmptyState
             icon={Plug}
             title="No services connected"
-            description="Add your first AI provider — APIHub currently supports Groq and DeepSeek. Once connected, its models become available across the dashboard and unified API."
+            description="Add your first AI provider. Once connected, its models become available across the dashboard, models page and playground."
             action={
               <button type="button" className="btn btn-primary" onClick={() => setDialogFor('add')}>
                 <Plus size={15} /> Add service
@@ -457,7 +452,7 @@ export function Services() {
       {deleting && (
         <ConfirmDialog
           title={`Delete "${deleting.name}"?`}
-          description="Usage history is kept, but the service and its key will be removed from APIHub."
+          description="Usage history is kept, but the service and its key will be removed from SocksAPI."
           onConfirm={() => {
             void deleteService(deleting.id)
             setDeleting(null)

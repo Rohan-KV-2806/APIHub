@@ -50,7 +50,7 @@ function CreateKeyDialog({ onClose }: { onClose: () => void }) {
           </div>
           <p className="field-hint">
             Use it in the Playground to call any model from your connected services. When the
-            APIHub backend ships, this same key works with any OpenAI-compatible client.
+            SocksAPI backend ships, this same key works with any OpenAI-compatible client.
           </p>
         </div>
       </Modal>
@@ -156,10 +156,10 @@ export function UnifiedApi() {
         <Info size={16} />
         <div>
           <strong>How it works:</strong> a unified key routes requests to the right provider
-          automatically — <span className="mono">groq/…</span> models go to Groq,{' '}
-          <span className="mono">deepseek/…</span> models go to DeepSeek. Every request is tracked
-          on your dashboard and counts against the key's limits. The external gateway (use this key
-          from any OpenAI-compatible client) arrives with the APIHub backend.
+          automatically — address a model as <span className="mono">provider/model-id</span> and
+          SocksAPI picks the service that serves it. Every request is tracked on your dashboard and
+          counts against the key's limits. Use the same key from any OpenAI-compatible client at{' '}
+          <span className="mono">/v1</span>.
         </div>
       </div>
 

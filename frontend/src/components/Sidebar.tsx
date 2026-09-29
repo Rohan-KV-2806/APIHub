@@ -13,7 +13,7 @@ export function Sidebar() {
           <Boxes size={20} strokeWidth={2.2} />
         </div>
         <div className="logo-text">
-          <span className="logo-name">APIHub</span>
+          <span className="logo-name">SocksAPI</span>
           <span className="logo-sub">AI Services</span>
         </div>
       </div>

@@ -6,10 +6,19 @@ import {
   type ReactNode,
 } from 'react'
 import { api } from '../lib/api'
-import type { ModelInfo, ProviderType, Service, Stats, UnifiedKey, UsageEntry } from '../lib/types'
+import type {
+  ModelInfo,
+  Provider,
+  ProviderType,
+  Service,
+  Stats,
+  UnifiedKey,
+  UsageEntry,
+} from '../lib/types'
 import { StoreContext } from './store'
 import { useToast } from '../components/ToastContext'
 
+// Legacy prefix — kept so old localStorage data can be migrated once.
 const LS_PREFIX = 'apihub.v1'
 let migrated = false
 
@@ -44,6 +53,7 @@ async function migrateLocalStorage(): Promise<
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const toast = useToast()
+  const [providers, setProviders] = useState<Provider[]>([])
   const [services, setServices] = useState<Service[]>([])
   const [keys, setKeys] = useState<UnifiedKey[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
@@ -51,16 +61,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const refresh = useCallback(async () => {
-    const [s, k, st] = await Promise.all([
+    const [p, s, k, st] = await Promise.all([
+      api.get<Provider[]>('/api/providers'),
       api.get<Service[]>('/api/services'),
       api.get<UnifiedKey[]>('/api/keys'),
       api.get<Stats>('/api/stats?days=14'),
     ])
+    setProviders(p)
     setServices(s)
     setKeys(k)
     setStats(st)
     setConnected(true)
   }, [])
+
+  const providerByType = useCallback(
+    (type: ProviderType) => providers.find((p) => p.type === type),
+    [providers],
+  )
 
   const syncServiceModels = useCallback(async (serviceId: string) => {
     const res = await api.post<{ models: ModelInfo[] }>(`/api/services/${serviceId}/sync`)
@@ -117,6 +134,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
+      providers,
+      providerByType,
       services,
       keys,
       stats,
@@ -170,7 +189,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setKeys((prev) => prev.filter((k) => k.id !== id))
       },
     }),
-    [services, keys, stats, connected, loading, refresh, syncServiceModels],
+    [
+      providers,
+      providerByType,
+      services,
+      keys,
+      stats,
+      connected,
+      loading,
+      refresh,
+      syncServiceModels,
+    ],
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

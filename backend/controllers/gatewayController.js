@@ -55,7 +55,7 @@ async function chatCompletions(request, reply) {
   if (!owner) {
     return reply.code(404).send({
       error: {
-        message: `Model "${model}" is not available. Use "provider/model-id" (e.g. groq/llama-3.3-70b-versatile) — see GET /v1/models.`,
+        message: `Model "${model}" is not available. Use "provider/model-id" — see GET /v1/models for the full catalog.`,
         type: "model_not_found",
       },
     });

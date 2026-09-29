@@ -1,4 +1,15 @@
-export type ProviderType = 'groq' | 'deepseek'
+// Provider ids are owned by the backend (GET /api/providers) — the frontend
+// treats them as opaque strings so new providers need no frontend change.
+export type ProviderType = string
+
+export interface Provider {
+  type: ProviderType
+  name: string
+  baseUrl: string
+  docsUrl?: string
+  keyHint?: string
+  color?: string
+}
 
 export interface ModelInfo {
   id: string

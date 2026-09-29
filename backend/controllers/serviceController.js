@@ -2,11 +2,7 @@ const { randomUUID } = require("node:crypto");
 const { Service } = require("../models");
 const { encrypt, decrypt } = require("../utils/crypto");
 const { serviceToJSON } = require("../utils/serializers");
-const {
-  PROVIDER_PRESETS,
-  fetchProviderModels,
-  syncServiceModels,
-} = require("../services/providerService");
+const { syncServiceModels } = require("../services/providerService");
 
 async function list() {
   const rows = await Service.findAll({ order: [["createdAt", "ASC"]] });
@@ -88,25 +84,4 @@ async function sync(request, reply) {
   }
 }
 
-// Validates an endpoint + key without persisting anything (used by the
-// add-service dialog to auto-load the model list).
-async function validate(request, reply) {
-  const { type, baseUrl, apiKey } = request.body ?? {};
-  if (!type || !apiKey) {
-    return reply.code(400).send({ error: { message: "type and apiKey are required" } });
-  }
-  try {
-    const models = await fetchProviderModels({
-      type,
-      baseUrl: baseUrl || PROVIDER_PRESETS[type]?.baseUrl,
-      apiKey,
-    });
-    return { ok: true, models };
-  } catch (err) {
-    return reply.code(400).send({
-      error: { message: err instanceof Error ? err.message : "Validation failed" },
-    });
-  }
-}
-
-module.exports = { list, create, update, remove, sync, validate };
+module.exports = { list, create, update, remove, sync };

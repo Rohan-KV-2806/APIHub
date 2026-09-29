@@ -18,7 +18,7 @@ async function create(request, reply) {
     return reply.code(400).send({ error: { message: "name is required" } });
   }
   const bytes = randomBytes(24);
-  const keyValue = `ah-${[...bytes].map((b) => b.toString(16).padStart(2, "0")).join("")}`;
+  const keyValue = `socks-${[...bytes].map((b) => b.toString(16).padStart(2, "0")).join("")}`;
   const row = await UnifiedKey.create({
     id: randomUUID(),
     name,

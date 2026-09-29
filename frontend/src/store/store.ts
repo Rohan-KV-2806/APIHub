@@ -1,7 +1,16 @@
 import { createContext, useContext } from 'react'
-import type { ModelInfo, ProviderType, Service, Stats, UnifiedKey } from '../lib/types'
+import type {
+  ModelInfo,
+  Provider,
+  ProviderType,
+  Service,
+  Stats,
+  UnifiedKey,
+} from '../lib/types'
 
 export interface AppStore {
+  providers: Provider[]
+  providerByType: (type: ProviderType) => Provider | undefined
   services: Service[]
   keys: UnifiedKey[]
   stats: Stats | null

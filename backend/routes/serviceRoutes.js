@@ -6,5 +6,4 @@ module.exports = async function serviceRoutes(fastify) {
   fastify.put("/api/services/:id", controller.update);
   fastify.delete("/api/services/:id", controller.remove);
   fastify.post("/api/services/:id/sync", controller.sync);
-  fastify.post("/api/providers/validate", controller.validate);
 };
