@@ -1,0 +1,57 @@
+import { NavLink } from 'react-router-dom'
+import { Boxes, KeyRound, LayoutDashboard } from 'lucide-react'
+import { useStore } from '../store/store'
+
+export function Sidebar() {
+  const { services, keys } = useStore()
+  const modelsCount = services.reduce((n, s) => n + s.models.length, 0)
+
+  return (
+    <aside className="sidebar">
+      <div className="sidebar-logo">
+        <div className="logo-mark">
+          <Boxes size={20} strokeWidth={2.2} />
+        </div>
+        <div className="logo-text">
+          <span className="logo-name">APIHub</span>
+          <span className="logo-sub">AI Services</span>
+        </div>
+      </div>
+
+      <nav className="nav">
+        <span className="nav-label">Overview</span>
+        <NavLink to="/" end className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+          <LayoutDashboard size={17} />
+          <span>Dashboard</span>
+        </NavLink>
+
+        <span className="nav-label">Manage</span>
+        <NavLink
+          to="/services"
+          className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+        >
+          <Boxes size={17} />
+          <span>Services</span>
+          {services.length > 0 && <span className="count-chip">{services.length}</span>}
+        </NavLink>
+        <NavLink
+          to="/unified-api"
+          className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+        >
+          <KeyRound size={17} />
+          <span>Unified API</span>
+          {keys.length > 0 && <span className="count-chip">{keys.length}</span>}
+        </NavLink>
+      </nav>
+
+      <div className="sidebar-footer">
+        <span className="status-dot" />
+        <span className="footer-text">
+          {modelsCount > 0
+            ? `${modelsCount} models · ${services.length} services`
+            : 'Local · no services yet'}
+        </span>
+      </div>
+    </aside>
+  )
+}
