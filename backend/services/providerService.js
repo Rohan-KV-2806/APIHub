@@ -11,10 +11,10 @@ function providerBase(serviceOrType) {
 }
 
 function authHeaders(apiKey) {
-  return {
-    Authorization: `Bearer ${apiKey}`,
-    "Content-Type": "application/json",
-  };
+  const headers = { "Content-Type": "application/json" };
+  // Some OpenAI-compatible endpoints (local/self-hosted) need no key.
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  return headers;
 }
 
 async function readErrorMessage(res) {

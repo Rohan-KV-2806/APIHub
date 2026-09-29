@@ -12,11 +12,11 @@ Inspired by the implementation of OpenRouter.
 - Add services
   - Groq
   - DeepSeek
+  - Custom providers (any OpenAI-compatible endpoint, key optional)
 - Create unified API keys
 - Playground
 
 ## ToDo (Not in order)
-- custom provider
 - service enable/disable
 - status (if working or not)
 - peak hours caluclation

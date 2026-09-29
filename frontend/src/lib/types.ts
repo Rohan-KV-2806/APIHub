@@ -3,12 +3,15 @@
 export type ProviderType = string
 
 export interface Provider {
-  type: ProviderType
+  // null marks the synthetic "custom provider" option (its id is chosen by the
+  // user and stored on the Service, so it has no catalog-level type).
+  type: ProviderType | null
   name: string
   baseUrl: string
   docsUrl?: string
   keyHint?: string
   color?: string
+  custom?: boolean
 }
 
 export interface ModelInfo {

@@ -12,7 +12,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { useStore } from '../store/store'
-import type { ProviderType, Service } from '../lib/types'
+import type { Provider, ProviderType, Service } from '../lib/types'
 import { Modal } from '../components/Modal'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { CopyButton } from '../components/CopyButton'
@@ -34,10 +34,26 @@ interface ServiceDialogProps {
 function ServiceDialog({ service, onClose }: ServiceDialogProps) {
   const { providers, addService, updateService, validateProvider } = useStore()
   const toast = useToast()
-  const initialProvider = providers.find((p) => p.type === service?.type) ?? providers[0]
-  const [type, setType] = useState<ProviderType>(service?.type ?? initialProvider?.type ?? '')
-  const [name, setName] = useState(service?.name ?? initialProvider?.name ?? '')
-  const [baseUrl, setBaseUrl] = useState(service?.baseUrl ?? initialProvider?.baseUrl ?? '')
+
+  // Built-in providers from the catalog plus the synthetic "custom" option
+  // (type === null). A service whose type matches no preset is a custom one.
+  const presetProviders = providers.filter(
+    (p): p is Provider & { type: string } => p.type !== null,
+  )
+  const customOption = providers.find((p) => p.custom) ?? null
+  const editingCustom = !!service && !presetProviders.some((p) => p.type === service.type)
+
+  const firstPreset = presetProviders[0]
+  const [custom, setCustom] = useState(editingCustom)
+  const [type, setType] = useState<ProviderType>(
+    service?.type ?? (editingCustom ? '' : (firstPreset?.type ?? '')),
+  )
+  const [name, setName] = useState(
+    service?.name ?? (editingCustom ? '' : (firstPreset?.name ?? '')),
+  )
+  const [baseUrl, setBaseUrl] = useState(
+    service?.baseUrl ?? (editingCustom ? '' : (firstPreset?.baseUrl ?? '')),
+  )
   const [apiKey, setApiKey] = useState(service?.apiKey ?? '')
   const [showKey, setShowKey] = useState(false)
   const [test, setTest] = useState<TestState>(
@@ -48,21 +64,43 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
   const [saving, setSaving] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
-  const preset = providers.find((p) => p.type === type)
+  const preset = custom ? undefined : presetProviders.find((p) => p.type === type)
   const effectiveName = name.trim() || preset?.name || 'Service'
 
+  // Keep the provider id in a routable shape: it is embedded in model names
+  // as "type/model-id", so lowercase letters, digits, dot, dash, underscore.
+  const setTypeSlug = (value: string) => {
+    let slug = value.toLowerCase().replace(/[^a-z0-9._-]/g, '')
+    slug = slug.replace(/^[^a-z0-9]*/, '')
+    setType(slug)
+  }
+
   const pickType = (t: ProviderType) => {
+    setCustom(false)
     setType(t)
     if (!service) {
-      const p = providers.find((x) => x.type === t)
+      const p = presetProviders.find((x) => x.type === t)
       if (p) {
         setBaseUrl(p.baseUrl)
         setName(p.name)
+        setApiKey('')
       }
     }
   }
 
-  const fieldsReady = baseUrl.trim() !== '' && apiKey.trim() !== ''
+  const pickCustom = () => {
+    setCustom(true)
+    if (!service) {
+      setType('')
+      setName('')
+      setBaseUrl('')
+      setApiKey('')
+    }
+  }
+
+  const fieldsReady =
+    baseUrl.trim() !== '' &&
+    (custom ? name.trim() !== '' && type.trim() !== '' : apiKey.trim() !== '')
   const effectiveTest: TestState = fieldsReady ? test : { phase: 'idle' }
 
   // Load models automatically as soon as an endpoint + key are available.
@@ -129,7 +167,7 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
   return (
     <Modal
       title={service ? 'Edit service' : 'Add a service'}
-      description="Connect an AI provider. Models are fetched automatically once the endpoint and API key are in place."
+      description="Connect an AI provider — from the catalog or any OpenAI-compatible endpoint. Models are fetched automatically once the endpoint is in place."
       onClose={onClose}
       footer={
         <>
@@ -146,9 +184,9 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
       <div className="stack-sm" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div className="field">
           <span className="field-label">Provider</span>
-          <div className="row" style={{ gap: 10 }}>
-            {providers.map((p) => {
-              const active = type === p.type
+          <div className="row" style={{ gap: 10, flexWrap: 'wrap' }}>
+            {presetProviders.map((p) => {
+              const active = !custom && type === p.type
               return (
                 <button
                   key={p.type}
@@ -173,6 +211,28 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
                 </button>
               )
             })}
+            {customOption && (
+              <button
+                type="button"
+                onClick={pickCustom}
+                className="card card-hover"
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '12px 14px',
+                  cursor: 'pointer',
+                  borderColor: custom ? 'var(--accent-border)' : undefined,
+                  background: custom ? 'var(--accent-soft)' : undefined,
+                }}
+              >
+                <span className="provider-tile small" style={{ backgroundColor: customOption.color }}>
+                  <Plus size={13} />
+                </span>
+                <span style={{ fontWeight: 600, fontSize: 13.5 }}>{customOption.name}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -186,12 +246,13 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
               className="input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={preset?.name}
+              placeholder={custom ? 'e.g. Home GPU server' : preset?.name}
             />
           </div>
           <div className="field">
             <label className="field-label" htmlFor="svc-key">
-              API key
+              API key{' '}
+              {custom && <span style={{ color: 'var(--text-3)', fontWeight: 500 }}>(optional)</span>}
             </label>
             <div className="input-wrap">
               <input
@@ -200,7 +261,7 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
                 type={showKey ? 'text' : 'password'}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder={preset?.keyHint}
+                placeholder={custom ? customOption?.keyHint : preset?.keyHint}
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -213,8 +274,36 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
                 {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
+            {custom && (
+              <span className="field-hint">
+                Leave blank if the endpoint requires no key (local endpoints like Ollama or LM
+                Studio).
+              </span>
+            )}
           </div>
         </div>
+
+        {custom && (
+          <div className="field">
+            <label className="field-label" htmlFor="svc-type">
+              Provider type
+            </label>
+            <input
+              id="svc-type"
+              className="input mono"
+              value={type}
+              onChange={(e) => setTypeSlug(e.target.value)}
+              placeholder="e.g. ollama, lm-studio, my-gateway"
+              spellCheck={false}
+              autoComplete="off"
+            />
+            <span className="field-hint">
+              A short unique id — models from this service appear as{' '}
+              <span className="mono">{type || 'type'}/model-id</span>. Lowercase letters, digits,
+              dots, dashes and underscores only.
+            </span>
+          </div>
+        )}
 
         <div className="field">
           <label className="field-label" htmlFor="svc-url">
@@ -225,7 +314,7 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
             className="input mono"
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder={preset?.baseUrl}
+            placeholder={custom ? 'https://your-endpoint.example/v1' : preset?.baseUrl}
             spellCheck={false}
           />
           {preset?.docsUrl && (
@@ -262,7 +351,11 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
             </span>
           )}
           {effectiveTest.phase === 'idle' && (
-            <span className="field-hint">Enter an API key to validate the endpoint and list models.</span>
+            <span className="field-hint">
+              {custom
+                ? 'Enter an endpoint to validate it and list its models.'
+                : 'Enter an API key to validate the endpoint and list models.'}
+            </span>
           )}
         </div>
       </div>
@@ -333,16 +426,22 @@ function ServiceCard({ service, onEdit, onDelete }: {
 
       <div className="row-between">
         <div className="row" style={{ gap: 8 }}>
-          <span className="key-value">{showKey ? service.apiKey : masked}</span>
-          <button
-            type="button"
-            className="icon-btn"
-            onClick={() => setShowKey((v) => !v)}
-            aria-label={showKey ? 'Hide key' : 'Show key'}
-          >
-            {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
-          </button>
-          <CopyButton value={service.apiKey} />
+          {service.apiKey ? (
+            <>
+              <span className="key-value">{showKey ? service.apiKey : masked}</span>
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setShowKey((v) => !v)}
+                aria-label={showKey ? 'Hide key' : 'Show key'}
+              >
+                {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+              <CopyButton value={service.apiKey} />
+            </>
+          ) : (
+            <span className="key-value">No API key</span>
+          )}
         </div>
         <span className="text-3" style={{ fontSize: 12 }}>
           {service.models.length > 0
@@ -390,7 +489,8 @@ export function Services() {
   // Keep model catalogs fresh (stale after 10 minutes) without spamming.
   useEffect(() => {
     const stale = services.filter(
-      (s) => s.apiKey && (!s.modelsSyncedAt || Date.now() - s.modelsSyncedAt > 10 * 60 * 1000),
+      (s) =>
+        s.baseUrl && (!s.modelsSyncedAt || Date.now() - s.modelsSyncedAt > 10 * 60 * 1000),
     )
     stale.forEach((s) => {
       syncServiceModels(s.id).catch(() => undefined)

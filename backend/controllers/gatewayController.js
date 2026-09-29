@@ -67,12 +67,12 @@ async function chatCompletions(request, reply) {
 
   let upstream;
   try {
+    const headers = { "Content-Type": "application/json" };
+    // Some OpenAI-compatible endpoints (local/self-hosted) need no key.
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
     upstream = await fetch(`${base}/chat/completions`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
         model: owner.modelId,
         messages,
