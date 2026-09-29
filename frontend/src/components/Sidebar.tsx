@@ -3,7 +3,7 @@ import { Boxes, FlaskConical, KeyRound, Layers, LayoutDashboard } from 'lucide-r
 import { useStore } from '../store/store'
 
 export function Sidebar() {
-  const { services, keys } = useStore()
+  const { services, keys, connected } = useStore()
   const modelsCount = services.reduce((n, s) => n + s.models.length, 0)
 
   return (
@@ -57,11 +57,13 @@ export function Sidebar() {
       </nav>
 
       <div className="sidebar-footer">
-        <span className="status-dot" />
+        <span className={`status-dot${connected === false ? ' off' : ''}`} />
         <span className="footer-text">
-          {modelsCount > 0
-            ? `${modelsCount} models · ${services.length} services`
-            : 'Local · no services yet'}
+          {connected === false
+            ? 'Backend offline'
+            : modelsCount > 0
+              ? `${modelsCount} models · ${services.length} services`
+              : 'Connected · no services yet'}
         </span>
       </div>
     </aside>

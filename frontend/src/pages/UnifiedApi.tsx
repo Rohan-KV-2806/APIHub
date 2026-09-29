@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Eye, EyeOff, Info, KeyRound, Plus, Trash2 } from 'lucide-react'
 import { useStore } from '../store/store'
-import { formatCompact, formatNumber, monthUsage, timeAgo } from '../lib/usage'
+import { formatCompact, formatNumber, timeAgo } from '../lib/usage'
 import { Modal } from '../components/Modal'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { CopyButton } from '../components/CopyButton'
@@ -17,9 +17,9 @@ function CreateKeyDialog({ onClose }: { onClose: () => void }) {
   const [requestLimit, setRequestLimit] = useState('')
   const [created, setCreated] = useState<string | null>(null)
 
-  const submit = () => {
+  const submit = async () => {
     if (name.trim() === '') return
-    const key = createKey({
+    const key = await createKey({
       name: name.trim(),
       monthlyTokens: tokenLimit.trim() === '' ? null : Number(tokenLimit),
       monthlyRequests: requestLimit.trim() === '' ? null : Number(requestLimit),
@@ -128,7 +128,7 @@ function CreateKeyDialog({ onClose }: { onClose: () => void }) {
 }
 
 export function UnifiedApi() {
-  const { services, keys, usage, deleteKey } = useStore()
+  const { services, keys, deleteKey } = useStore()
   const toast = useToast()
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -183,7 +183,7 @@ export function UnifiedApi() {
         ) : (
           <div className="stack-sm" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {keys.map((k) => {
-              const used = monthUsage(usage, k.id)
+              const used = k.monthUsage
               const tokPct =
                 k.limits.monthlyTokens && k.limits.monthlyTokens > 0
                   ? Math.min(100, (used.totalTokens / k.limits.monthlyTokens) * 100)
@@ -298,7 +298,7 @@ export function UnifiedApi() {
           title="Delete this key?"
           description="Requests made with this key will stop being attributed to it. The key cannot be recovered."
           onConfirm={() => {
-            deleteKey(deleting)
+            void deleteKey(deleting)
             setDeleting(null)
             toast('success', 'Key deleted')
           }}

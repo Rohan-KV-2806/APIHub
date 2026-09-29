@@ -1,4 +1,4 @@
-import { providerFetch } from './providers'
+import { ApiError } from './api'
 import type { ChatMessage } from './types'
 
 export interface ChatUsage {
@@ -23,7 +23,6 @@ export interface ChatResult {
 interface ChatCompletionChunk {
   choices?: Array<{
     delta?: { content?: string | null; reasoning_content?: string | null }
-    message?: { content?: string | null }
   }>
   usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }
 }
@@ -33,39 +32,45 @@ function estimateTokens(text: string): number {
   return Math.max(1, Math.ceil(text.length / 4))
 }
 
+// Streams a chat completion through the APIHub gateway using a unified key.
 export async function streamChatCompletion(opts: {
-  service: Parameters<typeof providerFetch>[0]
   model: string
   messages: ChatMessage[]
   temperature?: number
+  key: string
   callbacks: StreamCallbacks
 }): Promise<ChatResult> {
   const started = performance.now()
-  const res = await providerFetch(
-    opts.service,
-    '/chat/completions',
-    {
+  let res: Response
+  try {
+    res = await fetch('/v1/chat/completions', {
       method: 'POST',
+      headers: {
+        Authorization: `Bearer ${opts.key}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         model: opts.model,
         messages: opts.messages.map((m) => ({ role: m.role, content: m.content })),
         temperature: opts.temperature ?? 0.7,
         stream: true,
-        stream_options: { include_usage: true },
       }),
-    },
-    300000,
-  )
+    })
+  } catch {
+    throw new ApiError('Cannot reach the APIHub backend', 0)
+  }
 
   if (!res.ok || !res.body) {
-    let detail = `${res.status} ${res.statusText}`
+    let message = `${res.status} ${res.statusText}`
+    let type: string | undefined
     try {
-      const body = (await res.json()) as { error?: { message?: string } }
-      if (body?.error?.message) detail = body.error.message
+      const body = (await res.json()) as { error?: { message?: string; type?: string } }
+      if (body?.error?.message) message = body.error.message
+      if (body?.error?.type) type = body.error.type
     } catch {
       /* non-JSON error body */
     }
-    throw new Error(detail)
+    throw new ApiError(message, res.status, type)
   }
 
   const reader = res.body.getReader()

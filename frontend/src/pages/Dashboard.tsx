@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Activity,
@@ -21,15 +20,11 @@ import {
 } from 'recharts'
 import { useStore } from '../store/store'
 import {
-  byModel,
-  byProvider,
-  computeTotals,
-  dailySeries,
+  dayLabel,
   formatCompact,
   formatLatency,
   formatNumber,
   formatTime,
-  recentEntries,
 } from '../lib/usage'
 import { PROVIDER_PRESETS } from '../lib/providers'
 import { EmptyState } from '../components/EmptyState'
@@ -112,19 +107,22 @@ function StatCard({
 }
 
 export function Dashboard() {
-  const { services, keys, usage } = useStore()
+  const { services, keys, stats } = useStore()
   const navigate = useNavigate()
 
-  const totals = useMemo(() => computeTotals(usage), [usage])
-  const daily = useMemo(() => dailySeries(usage, 14), [usage])
-  const providers = useMemo(() => byProvider(usage), [usage])
-  const topModels = useMemo(() => byModel(usage, 6), [usage])
-  const recent = useMemo(() => recentEntries(usage, 10), [usage])
   const connectedServices = services.filter((s) => s.status === 'connected').length
+
+  if (!stats) return null
+
+  const totals = stats.totals
+  const daily = stats.daily.map((d) => ({ ...d, label: dayLabel(d.date) }))
+  const providers = stats.byProvider
+  const topModels = stats.byModel
+  const recent = stats.recent
 
   const providerTotal = providers.reduce((n, p) => n + p.requests, 0)
 
-  if (services.length === 0 && usage.length === 0) {
+  if (services.length === 0 && totals.requests === 0) {
     return (
       <div className="page">
         <div className="page-header">

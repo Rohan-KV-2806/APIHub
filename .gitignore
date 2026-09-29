@@ -1,0 +1,5 @@
+.env
+node_modules/
+
+# Backend runtime data (encryption secret)
+backend/data/

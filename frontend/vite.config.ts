@@ -6,17 +6,15 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // Provider endpoints are proxied through the dev server so browser
-      // calls work regardless of provider CORS policies.
-      '/proxy/groq': {
-        target: 'https://api.groq.com',
+      // APIHub backend (Fastify) — provider calls now happen server-side, so
+      // the browser only ever talks to the backend.
+      '/api': {
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/proxy\/groq/, '/openai/v1'),
       },
-      '/proxy/deepseek': {
-        target: 'https://api.deepseek.com',
+      '/v1': {
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/proxy\/deepseek/, ''),
       },
     },
   },

@@ -12,7 +12,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { useStore } from '../store/store'
-import { PROVIDER_PRESETS, PROVIDER_TYPES, fetchProviderModels } from '../lib/providers'
+import { PROVIDER_PRESETS, PROVIDER_TYPES } from '../lib/providers'
 import type { ProviderType, Service } from '../lib/types'
 import { Modal } from '../components/Modal'
 import { ConfirmDialog } from '../components/ConfirmDialog'
@@ -33,7 +33,7 @@ interface ServiceDialogProps {
 }
 
 function ServiceDialog({ service, onClose }: ServiceDialogProps) {
-  const { addService, updateService } = useStore()
+  const { addService, updateService, validateProvider } = useStore()
   const toast = useToast()
   const [type, setType] = useState<ProviderType>(service?.type ?? 'groq')
   const [name, setName] = useState(service?.name ?? PROVIDER_PRESETS[service?.type ?? 'groq'].name)
@@ -73,7 +73,7 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
       abortRef.current = controller
       setTest({ phase: 'testing' })
       try {
-        const models = await fetchProviderModels({
+        const models = await validateProvider({
           type,
           baseUrl: baseUrl.trim(),
           apiKey: apiKey.trim(),
@@ -90,7 +90,7 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
       }
     }, 700)
     return () => window.clearTimeout(timer)
-  }, [type, fieldsReady, baseUrl, apiKey])
+  }, [type, fieldsReady, baseUrl, apiKey, validateProvider])
 
   useEffect(() => () => abortRef.current?.abort(), [])
 
@@ -101,7 +101,7 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
     setSaving(true)
     try {
       if (service) {
-        updateService(service.id, {
+        await updateService(service.id, {
           name: effectiveName,
           type,
           baseUrl: baseUrl.trim(),
@@ -109,18 +109,17 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
         })
         toast('success', `"${effectiveName}" updated`)
       } else {
-        const created = await addService({
+        await addService({
           name: effectiveName,
           type,
           baseUrl: baseUrl.trim(),
           apiKey: apiKey.trim(),
         })
-        if (effectiveTest.phase === 'ok') {
-          updateService(created.id, { status: 'connected', statusMessage: null })
-        }
         toast('success', `"${effectiveName}" added`)
       }
       onClose()
+    } catch (err) {
+      toast('error', err instanceof Error ? err.message : 'Save failed')
     } finally {
       setSaving(false)
     }
@@ -286,7 +285,7 @@ function ServiceCard({ service, onEdit, onDelete }: {
   onEdit: () => void
   onDelete: () => void
 }) {
-  const { syncModels } = useStore()
+  const { syncServiceModels } = useStore()
   const toast = useToast()
   const [showKey, setShowKey] = useState(false)
   const [syncing, setSyncing] = useState(false)
@@ -298,7 +297,7 @@ function ServiceCard({ service, onEdit, onDelete }: {
   const resync = async () => {
     setSyncing(true)
     try {
-      const models = await syncModels(service.id)
+      const models = await syncServiceModels(service.id)
       toast('success', `Synced ${models.length} models from ${service.name}`)
     } catch (err) {
       toast('error', err instanceof Error ? err.message : 'Sync failed')
@@ -389,7 +388,7 @@ function ServiceCard({ service, onEdit, onDelete }: {
 }
 
 export function Services() {
-  const { services, deleteService, syncModels } = useStore()
+  const { services, deleteService, syncServiceModels } = useStore()
   const [dialogFor, setDialogFor] = useState<'add' | Service | null>(null)
   const [deleting, setDeleting] = useState<Service | null>(null)
 
@@ -399,7 +398,7 @@ export function Services() {
       (s) => s.apiKey && (!s.modelsSyncedAt || Date.now() - s.modelsSyncedAt > 10 * 60 * 1000),
     )
     stale.forEach((s) => {
-      syncModels(s.id).catch(() => undefined)
+      syncServiceModels(s.id).catch(() => undefined)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -440,7 +439,7 @@ export function Services() {
         <div>
           <h1 className="page-title">Services</h1>
           <p className="page-desc">
-            Your connected AI providers. Keys are stored locally in your browser and used to route
+            Your connected AI providers. Keys are stored encrypted on the backend and used to route
             unified API traffic.
           </p>
         </div>
@@ -460,7 +459,7 @@ export function Services() {
           title={`Delete "${deleting.name}"?`}
           description="Usage history is kept, but the service and its key will be removed from APIHub."
           onConfirm={() => {
-            deleteService(deleting.id)
+            void deleteService(deleting.id)
             setDeleting(null)
           }}
           onCancel={() => setDeleting(null)}

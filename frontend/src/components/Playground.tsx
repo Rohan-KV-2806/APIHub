@@ -2,9 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUp, Eraser, Info, Loader2, Send } from 'lucide-react'
 import { useStore } from '../store/store'
-import { findModelOwner } from '../lib/providers'
 import { streamChatCompletion } from '../lib/chat'
-import { formatLatency, monthUsage } from '../lib/usage'
+import { formatLatency } from '../lib/usage'
 import { useToast } from './ToastContext'
 import type { ChatMessage } from '../lib/types'
 
@@ -19,7 +18,7 @@ export function Playground({
   model: string | null
   onModelChange: (model: string) => void
 }) {
-  const { services, keys, usage, recordUsage } = useStore()
+  const { services, keys, refresh } = useStore()
   const toast = useToast()
 
   const allModels = useMemo(
@@ -97,19 +96,13 @@ export function Playground({
       return
     }
 
-    const limitsCheck = monthUsage(usage, key.id)
+    const limitsCheck = key.monthUsage
     if (key.limits.monthlyRequests !== null && limitsCheck.requests >= key.limits.monthlyRequests) {
       toast('error', `Monthly request limit reached for "${key.name}"`)
       return
     }
     if (key.limits.monthlyTokens !== null && limitsCheck.totalTokens >= key.limits.monthlyTokens) {
       toast('error', `Monthly token limit reached for "${key.name}"`)
-      return
-    }
-
-    const owner = findModelOwner(services, selectedModel)
-    if (!owner) {
-      toast('error', `No connected service provides "${selectedModel}". Sync models on the Services page.`)
       return
     }
 
@@ -127,10 +120,10 @@ export function Playground({
 
     try {
       const result = await streamChatCompletion({
-        service: owner.service,
-        model: owner.model.id,
+        model: selectedModel,
         messages: history,
         temperature,
+        key: key.key,
         callbacks: {
           onDelta: (delta) =>
             setMessages((prev) =>
@@ -149,19 +142,8 @@ export function Playground({
         completionTokens: result.usage.completionTokens,
         latencyMs: result.latencyMs,
       })
-      recordUsage({
-        keyId: key.id,
-        keyName: key.name,
-        serviceId: owner.service.id,
-        provider: owner.service.type,
-        model: `${owner.service.type}/${owner.model.id}`,
-        promptTokens: result.usage.promptTokens,
-        completionTokens: result.usage.completionTokens,
-        totalTokens: result.usage.totalTokens,
-        latencyMs: result.latencyMs,
-        status: result.status,
-        stream: true,
-      })
+      // Usage was recorded by the gateway; refresh stats + key usage.
+      void refresh()
     } catch (err) {
       setMessages((prev) => prev.filter((m) => m.id !== assistantId))
       toast('error', err instanceof Error ? err.message : 'Request failed')

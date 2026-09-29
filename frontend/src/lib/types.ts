@@ -32,6 +32,7 @@ export interface UnifiedKey {
   limits: KeyLimits
   createdAt: number
   lastUsedAt: number | null
+  monthUsage: { requests: number; totalTokens: number }
 }
 
 export interface UsageEntry {
@@ -78,4 +79,21 @@ export interface Totals {
   totalTokens: number
   avgLatencyMs: number
   errors: number
+}
+
+export interface GroupStat {
+  name: string
+  requests: number
+  promptTokens: number
+  completionTokens: number
+  totalTokens: number
+  avgLatencyMs: number
+}
+
+export interface Stats {
+  totals: Totals
+  daily: Array<Omit<DailyPoint, 'label'>>
+  byProvider: GroupStat[]
+  byModel: GroupStat[]
+  recent: UsageEntry[]
 }

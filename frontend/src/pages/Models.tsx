@@ -10,7 +10,7 @@ import { useToast } from '../components/ToastContext'
 import type { ModelRef } from '../lib/types'
 
 export function Models() {
-  const { services, syncModels } = useStore()
+  const { services, syncServiceModels } = useStore()
   const toast = useToast()
   const [search, setSearch] = useState('')
   const [providerFilter, setProviderFilter] = useState('all')
@@ -57,7 +57,7 @@ export function Models() {
 
   const refreshAll = async () => {
     setSyncing(true)
-    const results = await Promise.allSettled(services.map((s) => syncModels(s.id)))
+    const results = await Promise.allSettled(services.map((s) => syncServiceModels(s.id)))
     const failed = results.filter((r) => r.status === 'rejected').length
     const ok = results.length - failed
     if (failed > 0) {

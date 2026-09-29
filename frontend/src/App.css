@@ -118,6 +118,54 @@
   animation: pulse-dot 2.4s ease infinite;
 }
 
+.status-dot.off {
+  background: var(--danger);
+  animation: none;
+}
+
+/* ---------- Offline banner / loading ---------- */
+
+.offline-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.offline-banner code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 1px 6px;
+  border-radius: 5px;
+}
+
+.loading-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid var(--surface-3);
+  border-top-color: var(--accent-2);
+  animation: spin 0.8s linear infinite;
+}
+
 .main {
   flex: 1;
   min-width: 0;
