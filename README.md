@@ -15,6 +15,7 @@ Inspired by the implementation of OpenRouter.
   - Custom providers (any OpenAI-compatible endpoint, key optional)
 - Create unified API keys
 - Playground
+- Customer providers
 
 ## ToDo (Not in order)
 - service enable/disable
