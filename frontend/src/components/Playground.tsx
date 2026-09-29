@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowUp, Eraser, Loader2, Send } from 'lucide-react'
+import { ArrowUp, Eraser, Info, Loader2, Send } from 'lucide-react'
 import { useStore } from '../store/store'
 import { findModelOwner } from '../lib/providers'
 import { streamChatCompletion } from '../lib/chat'
@@ -172,7 +172,20 @@ export function Playground({
   }
 
   return (
-    <div className="chat-window">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {keys.length === 0 && (
+        <div className="info-banner">
+          <Info size={16} />
+          <div>
+            <strong>No unified key yet.</strong> Requests here are attributed to a unified key —
+            create one first.{' '}
+            <Link to="/unified-api" style={{ fontWeight: 600 }}>
+              Go to Unified API →
+            </Link>
+          </div>
+        </div>
+      )}
+      <div className="chat-window">
       <div
         className="row"
         style={{
@@ -367,6 +380,7 @@ export function Playground({
           )}
           <span className="usage-pill">~{sessionTokens} tok in conversation</span>
         </div>
+      </div>
       </div>
     </div>
   )

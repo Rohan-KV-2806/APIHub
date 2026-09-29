@@ -26,6 +26,8 @@ export const PROVIDER_PRESETS: Record<ProviderType, ProviderPreset> = {
     docsUrl: 'https://platform.deepseek.com/api_keys',
     keyHint: 'sk-...',
   },
+  
+
 }
 
 export const PROVIDER_TYPES: ProviderType[] = ['groq', 'deepseek']

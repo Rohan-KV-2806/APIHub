@@ -1,26 +1,13 @@
-import { useMemo, useRef, useState } from 'react'
-import {
-  Eye,
-  EyeOff,
-  Info,
-  KeyRound,
-  Layers,
-  Play,
-  Plus,
-  Search,
-  Sparkles,
-  Trash2,
-} from 'lucide-react'
+import { useState } from 'react'
+import { Eye, EyeOff, Info, KeyRound, Plus, Trash2 } from 'lucide-react'
 import { useStore } from '../store/store'
-import { PROVIDER_PRESETS } from '../lib/providers'
 import { formatCompact, formatNumber, monthUsage, timeAgo } from '../lib/usage'
 import { Modal } from '../components/Modal'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { CopyButton } from '../components/CopyButton'
 import { EmptyState } from '../components/EmptyState'
-import { Playground } from '../components/Playground'
+import { PlaygroundPicker } from '../components/PlaygroundPicker'
 import { useToast } from '../components/ToastContext'
-import type { ModelRef } from '../lib/types'
 
 function CreateKeyDialog({ onClose }: { onClose: () => void }) {
   const { createKey } = useStore()
@@ -62,7 +49,7 @@ function CreateKeyDialog({ onClose }: { onClose: () => void }) {
             </pre>
           </div>
           <p className="field-hint">
-            Use it in the playground below to call any model from your connected services. When the
+            Use it in the Playground to call any model from your connected services. When the
             APIHub backend ships, this same key works with any OpenAI-compatible client.
           </p>
         </div>
@@ -141,54 +128,11 @@ function CreateKeyDialog({ onClose }: { onClose: () => void }) {
 }
 
 export function UnifiedApi() {
-  const { services, keys, usage, deleteKey, syncModels } = useStore()
+  const { services, keys, usage, deleteKey } = useStore()
   const toast = useToast()
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [revealed, setRevealed] = useState<Set<string>>(new Set())
-  const [search, setSearch] = useState('')
-  const [playgroundModel, setPlaygroundModel] = useState<string | null>(null)
-  const playgroundRef = useRef<HTMLDivElement>(null)
-  const searchRef = useRef<HTMLInputElement>(null)
-
-  const models = useMemo<ModelRef[]>(
-    () =>
-      services.flatMap((s) =>
-        s.models.map((m) => ({
-          serviceId: s.id,
-          provider: s.type,
-          providerName: s.name,
-          model: m,
-        })),
-      ),
-    [services],
-  )
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return models
-    return models.filter(
-      (m) =>
-        m.model.id.toLowerCase().includes(q) ||
-        m.providerName.toLowerCase().includes(q),
-    )
-  }, [models, search])
-
-  const grouped = useMemo(() => {
-    const byService = new Map<string, ModelRef[]>()
-    for (const m of filtered) {
-      const list = byService.get(m.providerName) ?? []
-      list.push(m)
-      byService.set(m.providerName, list)
-    }
-    return [...byService.entries()]
-  }, [filtered])
-
-  const tryModel = (ref: ModelRef) => {
-    setPlaygroundModel(`${ref.provider}/${ref.model.id}`)
-    playgroundRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    toast('info', `Loaded ${ref.provider}/${ref.model.id} in the playground`)
-  }
 
   return (
     <div className="page">
@@ -201,6 +145,7 @@ export function UnifiedApi() {
           </p>
         </div>
         <div className="page-actions">
+          <PlaygroundPicker services={services} style={{ width: 300 }} />
           <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
             <Plus size={15} /> Create key
           </button>
@@ -345,95 +290,6 @@ export function UnifiedApi() {
             })}
           </div>
         )}
-      </div>
-
-      <div className="section">
-        <div className="section-title">
-          <Layers size={15} /> Available models
-          <span className="count-chip">{models.length}</span>
-          <span className="grow" />
-          <div className="input-wrap" style={{ width: 260 }}>
-            <Search
-              size={14}
-              style={{ position: 'absolute', left: 10, color: 'var(--text-3)', zIndex: 1 }}
-            />
-            <input
-              ref={searchRef}
-              className="input"
-              style={{ paddingLeft: 32 }}
-              placeholder="Search models…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-        </div>
-        {models.length === 0 ? (
-          <div className="card">
-            <EmptyState
-              icon={Sparkles}
-              title="No models yet"
-              description="Connect a service — or sync an existing one — and its models appear here automatically."
-              action={
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => {
-                    services.forEach((s) => syncModels(s.id).catch(() => undefined))
-                    toast('info', 'Syncing models…')
-                  }}
-                  disabled={services.length === 0}
-                >
-                  Sync now
-                </button>
-              }
-            />
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {grouped.map(([providerName, refs]) => (
-              <div key={providerName}>
-                <div className="row" style={{ gap: 9, marginBottom: 10 }}>
-                  <span className={`provider-tile ${refs[0].provider}`} style={{ width: 24, height: 24, borderRadius: 7, fontSize: 10 }}>
-                    {PROVIDER_PRESETS[refs[0].provider].name[0]}
-                  </span>
-                  <span style={{ fontWeight: 650, fontSize: 13.5 }}>{providerName}</span>
-                  <span className="count-chip">{refs.length}</span>
-                </div>
-                <div className="model-grid">
-                  {refs.map((ref) => (
-                    <div className="model-card" key={`${ref.provider}/${ref.model.id}`}>
-                      <div style={{ minWidth: 0 }}>
-                        <div className="model-id">{ref.model.id}</div>
-                        <div className="model-meta">
-                          <span className="mono">{ref.provider}/{ref.model.id}</span>
-                          {ref.model.context_window ? (
-                            <span>· {formatCompact(ref.model.context_window)} ctx</span>
-                          ) : null}
-                          {ref.model.owned_by ? <span>· {ref.model.owned_by}</span> : null}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn btn-sm"
-                        onClick={() => tryModel(ref)}
-                        title="Try in playground"
-                      >
-                        <Play size={12} /> Try
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="section" ref={playgroundRef}>
-        <div className="section-title">
-          <Play size={15} /> Playground
-        </div>
-        <Playground model={playgroundModel} onModelChange={setPlaygroundModel} />
       </div>
 
       {creating && <CreateKeyDialog onClose={() => setCreating(false)} />}

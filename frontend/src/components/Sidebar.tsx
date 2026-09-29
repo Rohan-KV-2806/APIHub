@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Boxes, KeyRound, LayoutDashboard } from 'lucide-react'
+import { Boxes, FlaskConical, KeyRound, Layers, LayoutDashboard } from 'lucide-react'
 import { useStore } from '../store/store'
 
 export function Sidebar() {
@@ -34,6 +34,11 @@ export function Sidebar() {
           <span>Services</span>
           {services.length > 0 && <span className="count-chip">{services.length}</span>}
         </NavLink>
+        <NavLink to="/models" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+          <Layers size={17} />
+          <span>Models</span>
+          {modelsCount > 0 && <span className="count-chip">{modelsCount}</span>}
+        </NavLink>
         <NavLink
           to="/unified-api"
           className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
@@ -41,6 +46,13 @@ export function Sidebar() {
           <KeyRound size={17} />
           <span>Unified API</span>
           {keys.length > 0 && <span className="count-chip">{keys.length}</span>}
+        </NavLink>
+        <NavLink
+          to="/playground"
+          className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+        >
+          <FlaskConical size={17} />
+          <span>Playground</span>
         </NavLink>
       </nav>
 

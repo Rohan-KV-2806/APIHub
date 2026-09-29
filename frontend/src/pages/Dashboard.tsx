@@ -444,7 +444,7 @@ export function Dashboard() {
           <EmptyState
             icon={Gauge}
             title="No requests yet"
-            description="Every request you make through the unified API playground is tracked here — tokens, latency and errors."
+            description="Every request you make through the Playground is tracked here — tokens, latency and errors."
           />
         )}
       </div>

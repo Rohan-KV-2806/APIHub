@@ -15,10 +15,12 @@ tracking built in.
   is **fetched automatically** as soon as the endpoint + key are in place, and
   re-synced when stale. Keys are stored locally in your browser and can be
   revealed/copied per service.
-- **Unified API** — create `ah-…` keys with optional monthly token/request limits,
-  browse every model across all services, and chat with any of them in the
-  streaming playground. Every request is attributed to the selected key and feeds
-  the dashboard. (Reasoning models show a collapsible "Reasoning" block.)
+- **Models** — the full catalog across your connected services: search by name,
+  filter by provider, and open any model straight into the Playground.
+- **Unified API** — create `ah-…` keys with optional monthly token/request limits.
+  A grouped dropdown lets you pick any model and jump straight into the Playground.
+- **Playground** — chat with any model from your connected services (streaming), attributed to
+  the unified key of your choice. Reasoning models show a collapsible "Reasoning" block.
 
 ## Getting started
 
@@ -71,5 +73,5 @@ frontend/
     ├── lib/                    # providers, streaming chat, usage stats, storage
     ├── store/                  # app state (context + localStorage persistence)
     ├── components/             # sidebar, modals, toasts, playground, …
-    └── pages/                  # Dashboard, Services, UnifiedApi
+    └── pages/                  # Dashboard, Services, Models, UnifiedApi, PlaygroundPage
 ```
