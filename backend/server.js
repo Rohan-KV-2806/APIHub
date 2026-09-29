@@ -63,9 +63,9 @@ const start = async () => {
       host: HOST,
     });
 
-    console.log(`🚀 APIHub backend running on http://${HOST}:${PORT}`);
+    console.log(`APIHub backend running on http://${HOST}:${PORT}`);
   } catch (error) {
-    console.error("❌ Database connection failed");
+    console.error("Database connection failed");
     console.error(error);
 
     process.exit(1);

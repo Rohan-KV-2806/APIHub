@@ -18,7 +18,7 @@ function OfflineBanner() {
     <div className="offline-banner">
       <TriangleAlert size={16} />
       <span>
-        Backend not reachable — start it with <code>cd backend &amp;&amp; npm start</code>. Retrying
+        Server not reachable Retrying
         every 5s…
       </span>
     </div>
