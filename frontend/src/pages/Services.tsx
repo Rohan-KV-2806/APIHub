@@ -17,6 +17,7 @@ import { Modal } from '../components/Modal'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { CopyButton } from '../components/CopyButton'
 import { EmptyState } from '../components/EmptyState'
+import { ProviderMark } from '../components/ProviderMark'
 import { useToast } from '../components/ToastContext'
 import { timeAgo } from '../lib/usage'
 
@@ -204,9 +205,7 @@ function ServiceDialog({ service, onClose }: ServiceDialogProps) {
                     background: active ? 'var(--accent-soft)' : undefined,
                   }}
                 >
-                  <span className="provider-tile small" style={{ backgroundColor: p.color }}>
-                    {p.name[0]}
-                  </span>
+                  <ProviderMark provider={p} size="sm" fallback={p.name[0]} />
                   <span style={{ fontWeight: 600, fontSize: 13.5 }}>{p.name}</span>
                 </button>
               )
@@ -408,12 +407,10 @@ function ServiceCard({ service, onEdit, onDelete }: {
     <div className="card card-hover" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div className="row-between">
         <div className="row" style={{ gap: 12 }}>
-          <span
-            className="provider-tile"
-            style={{ backgroundColor: providerByType(service.type)?.color }}
-          >
-            {(service.name || providerByType(service.type)?.name || '?')[0]}
-          </span>
+          <ProviderMark
+            provider={providerByType(service.type)}
+            fallback={(service.name || providerByType(service.type)?.name || '?')[0]}
+          />
           <div>
             <div className="card-title">{service.name}</div>
             <div className="card-sub mono truncate" style={{ maxWidth: 260 }}>

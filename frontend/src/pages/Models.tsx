@@ -5,6 +5,7 @@ import { useStore } from '../store/store'
 import { formatCompact } from '../lib/usage'
 import { EmptyState } from '../components/EmptyState'
 import { PlaygroundPicker } from '../components/PlaygroundPicker'
+import { ProviderMark } from '../components/ProviderMark'
 import { useToast } from '../components/ToastContext'
 import type { ModelRef } from '../lib/types'
 
@@ -181,18 +182,11 @@ export function Models() {
           {grouped.map(([providerName, refs]) => (
             <div key={providerName}>
               <div className="row" style={{ gap: 9, marginBottom: 10 }}>
-                <span
-                  className="provider-tile"
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: 7,
-                    fontSize: 10,
-                    backgroundColor: providerByType(refs[0].provider)?.color,
-                  }}
-                >
-                  {(providerByType(refs[0].provider)?.name ?? providerName)[0] ?? '?'}
-                </span>
+                <ProviderMark
+                  provider={providerByType(refs[0].provider)}
+                  fallback={(providerByType(refs[0].provider)?.name ?? providerName)[0] ?? '?'}
+                  style={{ width: 24, height: 24, borderRadius: 7, fontSize: 10 }}
+                />
                 <span style={{ fontWeight: 650, fontSize: 13.5 }}>{providerName}</span>
                 <span className="count-chip">{refs.length}</span>
               </div>

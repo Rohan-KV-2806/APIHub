@@ -11,6 +11,9 @@ const PROVIDER_PRESETS = {
     docsUrl: "https://console.groq.com/keys",
     keyHint: "gsk_...",
     color: "#f55036",
+    // Brand marks live in frontend/public/brands and are served at /brands
+    // both in dev (Vite) and production (backend serves frontend/dist).
+    icon: "/brands/groq.svg",
   },
   deepseek: {
     type: "deepseek",
@@ -19,6 +22,7 @@ const PROVIDER_PRESETS = {
     docsUrl: "https://platform.deepseek.com/api_keys",
     keyHint: "sk-...",
     color: "#4d6bfe",
+    icon: "/brands/deepseek.svg",
   },
 };
 

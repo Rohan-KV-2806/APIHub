@@ -27,6 +27,7 @@ import {
   formatTime,
 } from '../lib/usage'
 import { EmptyState } from '../components/EmptyState'
+import { ProviderMark } from '../components/ProviderMark'
 
 interface TipPayloadItem {
   name?: string
@@ -326,18 +327,11 @@ export function Dashboard() {
                 {providers.map((p) => (
                   <div key={p.name} className="row-between">
                     <span className="row" style={{ gap: 9 }}>
-                      <span
-                        className="provider-tile"
-                        style={{
-                          width: 22,
-                          height: 22,
-                          borderRadius: 7,
-                          fontSize: 10,
-                          backgroundColor: providerByType(p.name)?.color,
-                        }}
-                      >
-                        {(providerByType(p.name)?.name ?? p.name)[0] ?? '?'}
-                      </span>
+                      <ProviderMark
+                        provider={providerByType(p.name)}
+                        fallback={(providerByType(p.name)?.name ?? p.name)[0] ?? '?'}
+                        style={{ width: 22, height: 22, borderRadius: 7, fontSize: 10 }}
+                      />
                       <span style={{ fontWeight: 600, fontSize: 13.5 }}>
                         {providerByType(p.name)?.name ?? p.name}
                       </span>
@@ -425,19 +419,17 @@ export function Dashboard() {
                       {e.model}
                     </td>
                     <td>
-                      <span
-                        className="provider-tile"
+                      <ProviderMark
+                        provider={providerByType(e.provider)}
+                        fallback={(providerByType(e.provider)?.name ?? e.provider)[0] ?? '?'}
                         style={{
                           width: 20,
                           height: 20,
                           borderRadius: 6,
                           fontSize: 9,
                           display: 'inline-grid',
-                          backgroundColor: providerByType(e.provider)?.color,
                         }}
-                      >
-                        {(providerByType(e.provider)?.name ?? e.provider)[0] ?? '?'}
-                      </span>
+                      />
                     </td>
                     <td className="text-3">{e.keyName ?? '—'}</td>
                     <td className="num">{formatNumber(e.promptTokens)}</td>

@@ -7,6 +7,7 @@ Inspired by the implementation of OpenRouter.
 ## Implementation So Far
 
 - Base UI
+- Provider brand icons
 - Backend 
 - Postgres DB
 - Add services

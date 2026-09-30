@@ -11,6 +11,9 @@ export interface Provider {
   docsUrl?: string
   keyHint?: string
   color?: string
+  // URL to the provider's brand mark (served from /brands by the frontend).
+  // Absent for the custom entry — show a letter tile instead.
+  icon?: string
   custom?: boolean
 }
 

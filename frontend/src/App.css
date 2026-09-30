@@ -593,6 +593,13 @@
   font-size: 11px;
 }
 
+/* Brand marks rendered inside the tile (white-on-brand-color SVGs). */
+.provider-tile img {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+}
+
 /* ---------- Tables ---------- */
 
 .table-wrap {
